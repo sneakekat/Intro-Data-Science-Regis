@@ -1,0 +1,76 @@
+---
+title: "Week6, SVM & Cross-Validation"
+author: "kat"
+date: "December 3, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##### Ideally model would predict 0 for first 1000 values and 1for last 1000 values, but a number of 1's predicted in the first 1000 nmbers and a fewer number of 0's predicted in the second set of 1000 numbers.
+##### Predicted 883 0's and 1117 1's.
+```{r}
+library(e1071)
+srd1 <- read.csv("srd1.csv", header=FALSE)
+srd2 <- read.csv("srd2.csv", header=FALSE)
+
+y1 <- rep(0,1000)
+y2 <- rep(1,1000)
+y <- factor(c(y1, y2))
+x <- rbind(srd1, srd2)
+model <- svm(x, y, type="C-classification") #support vector machines algorithm, data classification method
+p <- predict(model,x)
+summary(p)
+plot(array(p))
+
+f=plot(srd1, col="red")
+points(srd2, col="blue")
+
+```
+
+#### Viewing the above example in 3-D
+##### Not too sure what the ambiguity is referring to or what the 3d plot helps me to visualize. The error in the model? 
+```{r}
+
+library(scatterplot3d)
+i <- as.matrix(as.numeric(predict(model, x[1:1000,]))-1) # predicts the first thousand
+j <- as.matrix(as.numeric(predict(model, x[1001:2000,]))-2)
+j <- abs(j)
+z <- c(i,j)
+scatterplot3d(x[,1], x[,2], z, pch=1, highlight.3d=TRUE, type="h", main="SVM_2", xlab = "x", ylab = "y", zlab = "ambiguity", angle = 65) 
+
+```
+
+##### Predicting 10,000 length data from 1000 length data. This model predicts 8745 0's and 11255 1's.
+
+```{r}
+rd1 <- read.csv("rd1.csv", header=FALSE)
+rd2 <- read.csv("rd2.csv", header=FALSE)
+
+xlong <- rbind(rd1, rd2)
+
+p2 <- predict(model,xlong)
+summary(p2)
+plot(array(p2))
+
+g=plot(rd1, col="red")
+points(rd2, col="blue")
+
+```
+
+##### 3d plot for 10,000 length data
+```{r}
+k <- as.matrix(as.numeric(predict(model, xlong[1:10000,]))-1) # predicts the first thousand
+m <- as.matrix(as.numeric(predict(model, xlong[10001:20000,]))-2)
+m <- abs(m)
+z2 <- c(k,m)
+scatterplot3d(xlong[,1], xlong[,2], z2, pch=1, highlight.3d=TRUE, type="h", main="SVM_2", xlab = "x", ylab = "y", zlab = "ambiguity", angle = 65) 
+
+```
+
+#### Cross Validation for these Models
+##### The idea behind cross-validation is that instead of having just a trainng and test set, you can split the training set into k groups of approximately the same size then train a SVM using k-1 groups to make a prediction on the group. This method is called k-folds. You could also just take a sample of the larger data to create a model then use the remaining data to predict from the model.
+
+##### If ambiguity is the error in this model, then I would say we could combine the two file above and just take a sample of the data, then use the remainining data to try and predict. Of course ideally, if we had the chance to get more data that would most definitely help our model. 
